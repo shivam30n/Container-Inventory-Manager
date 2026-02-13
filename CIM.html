@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal | Precision Alignment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@500&display=swap');
+        
+        :root {
+            --bg-deep: #0f1115;      
+            --bg-slate: #1a1e23;     
+            --bg-input: #242931;     
+            --border-cool: #2d343e;  
+            --text-off-white: #f1f5f9; 
+            --text-dim: #64748b;      
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-off-white);
+            scroll-behavior: smooth;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .fancy-header {
+            font-weight: 900;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .panel { background-color: var(--bg-slate); border: 1px solid var(--border-cool); border-radius: 12px; }
+        
+        input, textarea { 
+            background: var(--bg-input) !important; 
+            border: 1px solid var(--border-cool) !important; 
+            color: white !important; 
+            padding: 12px; 
+            border-radius: 8px;
+        }
+        input:focus { outline: none; border-color: #f1f5f9 !important; }
+
+        .btn-industrial { 
+            background: #f1f5f9; 
+            color: #0f172a; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: 10px; 
+            letter-spacing: 0.1em;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .btn-industrial:hover { background: #cbd5e1; transform: translateY(-1px); }
+
+        .page-btn { 
+            padding: 5px 15px; 
+            font-size: 11px; 
+            border: 1px solid var(--border-cool); 
+            color: var(--text-dim); 
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .page-btn.active { background: #f1f5f9; color: #0f1115; font-weight: 700; border-color: #f1f5f9; }
+        .page-btn:hover:not(.active) { border-color: #f1f5f9; color: #f1f5f9; }
+
+        .tag-small { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; border: 1px solid currentColor; }
+        .table-row:hover { background: rgba(255,255,255,0.02); }
+        .hidden { display: none; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--border-cool); border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen pb-10">
+
+    <div id="landing-page" class="max-w-5xl mx-auto pt-40 px-6">
+        <div class="text-center mb-20">
+            <h1 class="text-5xl font-black text-white tracking-tighter mb-4 italic">TERMINAL COMMAND</h1>
+            <p class="text-dim text-xs tracking-[0.5em] uppercase">Select Carrier Registry</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-10">
+            <div onclick="app.openDashboard('WHL')" class="panel p-16 cursor-pointer hover:border-white transition-all text-center group">
+                <h2 class="text-3xl font-black group-hover:tracking-widest transition-all">WAN HAI</h2>
+            </div>
+            <div onclick="app.openDashboard('TURKON')" class="panel p-16 cursor-pointer hover:border-white transition-all text-center group">
+                <h2 class="text-3xl font-black group-hover:tracking-widest transition-all">TURKON</h2>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-page" class="hidden">
+        <header class="py-10 border-b border-white/5 bg-[#0f1115]/80 backdrop-blur-lg sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-8 relative">
+                <button onclick="app.closeDashboard()" class="absolute left-8 top-1/2 -translate-y-1/2 text-dim hover:text-white transition-colors">
+                    <i data-lucide="chevron-left" class="w-8 h-8"></i>
+                </button>
+                <div class="text-center">
+                    <h2 id="current-line-title" class="fancy-header text-4xl text-white inline-block border-x-4 border-white/20 px-12">--</h2>
+                </div>
+                <div class="absolute right-8 top-1/2 -translate-y-1/2">
+                    <button onclick="ui.toggleModal('add-modal', true)" class="btn-industrial">Import Stock</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 bg-white/5 p-8 rounded-2xl border border-white/5">
+                <div class="flex gap-16">
+                    <div>
+                        <p id="label-20" class="text-[10px] font-bold text-dim uppercase tracking-[0.3em] mb-2">--</p>
+                        <h3 id="kpi-20" class="text-5xl font-black mono text-white">0</h3>
+                    </div>
+                    <div>
+                        <p id="label-40" class="text-[10px] font-bold text-dim uppercase tracking-[0.3em] mb-2">--</p>
+                        <h3 id="kpi-40" class="text-5xl font-black mono text-white">0</h3>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-4">
+                    <div class="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                        <button onclick="app.setFilter('ALL')" id="filter-all" class="page-btn active rounded-md border-none px-6">ALL</button>
+                        <button onclick="app.setFilter('S20')" id="filter-20" class="page-btn rounded-md border-none px-6">20'</button>
+                        <button onclick="app.setFilter('S40')" id="filter-40" class="page-btn rounded-md border-none px-6">40'</button>
+                    </div>
+                    
+                    <div class="relative w-72">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-dim"></i>
+                        <input type="text" id="search-input" oninput="app.refreshUI(true)" placeholder="FIND CONTAINER..." class="w-full pl-12 text-xs uppercase font-bold tracking-widest bg-transparent">
+                    </div>
+                    
+                </div>
+            </div>
+
+            <section class="mb-24">
+                <div class="flex justify-between items-center mb-6">
+                    <h4 class="text-[11px] font-black text-white/40 uppercase tracking-[0.4em]">Available Stock Inventory</h4>
+                    <div id="pagination-controls" class="flex gap-2"></div>
+                </div>
+                <div class="panel overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-white/5 text-[10px] uppercase text-dim tracking-widest border-b border-white/5">
+                            <tr><th class="p-5">Equipment ID</th><th class="p-5">Type</th><th class="p-5 text-right">Process</th></tr>
+                        </thead>
+                        <tbody id="empty-table-body" class="divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="allotted-section">
+                <div class="flex justify-between items-center mb-6">
+                    <h4 class="text-[11px] font-black text-white/40 uppercase tracking-[0.4em]">Active Allotment Records</h4>
+                </div>
+                <div class="panel overflow-hidden">
+                    <table class="w-full text-left text-[13px]">
+                        <thead class="bg-white/5 text-[10px] uppercase text-dim tracking-widest border-b border-white/5">
+                            <tr>
+                                <th class="p-5">Unit #</th><th class="p-5">Type</th><th class="p-5">Party</th>
+                                <th class="p-5">Booking</th><th class="p-5">Vessel</th><th class="p-5">Date</th>
+                                <th class="p-5">Pickup</th><th class="p-5 text-right">Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allotted-table-body" class="divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="allot-modal" class="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-50 hidden p-4">
+        <div class="panel w-full max-w-2xl p-10 rounded-3xl shadow-2xl border-white/10">
+            <div class="flex justify-between items-center mb-10 pb-6 border-b border-white/10">
+                <h3 id="allot-title" class="text-4xl font-black mono tracking-tighter text-white italic">--</h3>
+                <span id="type-badge" class="tag-small px-4 py-2 text-sm">--</span>
+            </div>
+            <input type="hidden" id="allot-id">
+            <div class="grid grid-cols-2 gap-8">
+                <div class="col-span-2"><label class="block text-[10px] font-bold text-dim uppercase mb-2 tracking-widest">Party Name</label><input type="text" id="party-name" class="w-full"></div>
+                <div><label class="block text-[10px] font-bold text-dim uppercase mb-2 tracking-widest">Booking #</label><input type="text" id="booking-num" class="w-full"></div>
+                <div><label class="block text-[10px] font-bold text-dim uppercase mb-2 tracking-widest">Vessel Name</label><input type="text" id="vessel-name" class="w-full"></div>
+                <div><label class="block text-[10px] font-bold text-dim uppercase mb-2 tracking-widest">Allot Date</label><input type="date" id="allot-date" class="w-full"></div>
+                <div><label class="block text-[10px] font-bold text-dim uppercase mb-2 tracking-widest">Pickup Date</label><input type="date" id="pickup-date" class="w-full"></div>
+            </div>
+            <div class="flex justify-between items-center mt-12 pt-8 border-t border-white/5">
+                <div id="unallot-btn-container"></div>
+                <div class="flex gap-6"><button onclick="ui.toggleModal('allot-modal', false)" class="text-dim text-[11px] font-bold uppercase tracking-widest">Discard</button><button onclick="app.saveAllotment()" class="btn-industrial px-12 py-4">Save Entry</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50 hidden p-4">
+        <div class="panel w-full max-w-xl p-10 rounded-3xl border-white/10">
+            <h3 class="text-2xl font-black mb-2 uppercase italic tracking-tight">Bulk Import</h3>
+            <p id="import-hint" class="text-dim text-[10px] mb-8 uppercase tracking-[0.3em]">--</p>
+            <textarea id="bulk-input" rows="10" class="w-full mono text-sm mb-8 bg-black/50"></textarea>
+            <div class="flex justify-end gap-6">
+                <button onclick="ui.toggleModal('add-modal', false)" class="text-dim text-[11px] font-bold uppercase tracking-widest">Cancel</button>
+                <button onclick="app.handleAddContainers()" class="btn-industrial px-10 py-3">Confirm Batch</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DB = {
+            key: 'CONT_INV_V13_FIXED',
+            data: { WHL: [], TURKON: [] },
+            init() { const raw = localStorage.getItem(this.key); if (raw) this.data = JSON.parse(raw); },
+            save() { localStorage.setItem(this.key, JSON.stringify(this.data)); }
+        };
+
+        const app = {
+            activeLine: null,
+            currentFilter: 'ALL',
+            currentPage: 1,
+            pageSize: 10,
+
+            get stds() { return this.activeLine === 'WHL' ? { s: '20STD', l: '40H/C' } : { s: '20DV', l: '40HC' }; },
+
+            openDashboard(line) {
+                this.activeLine = line;
+                document.getElementById('current-line-title').innerText = line === 'WHL' ? 'WAN HAI' : 'TURKON';
+                document.getElementById('label-20').innerText = this.stds.s + ' UNITS';
+                document.getElementById('label-40').innerText = this.stds.l + ' UNITS';
+                document.getElementById('import-hint').innerText = `Format: UNIT [${this.stds.s} / ${this.stds.l}]`;
+                document.getElementById('landing-page').classList.add('hidden');
+                document.getElementById('dashboard-page').classList.remove('hidden');
+                this.refreshUI(true);
+            },
+
+            closeDashboard() {
+                this.activeLine = null;
+                document.getElementById('landing-page').classList.remove('hidden');
+                document.getElementById('dashboard-page').classList.add('hidden');
+            },
+
+            setFilter(f) {
+                this.currentFilter = f;
+                document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`filter-${f === 'ALL' ? 'all' : (f === 'S20' ? '20' : '40')}`).classList.add('active');
+                this.refreshUI(true);
+            },
+
+            refreshUI(reset = false) {
+                if(reset) this.currentPage = 1;
+                const list = DB.data[this.activeLine];
+                const search = document.getElementById('search-input').value.toUpperCase();
+                let filtered = list;
+                if(this.currentFilter === 'S20') filtered = filtered.filter(c => c.type === this.stds.s);
+                if(this.currentFilter === 'S40') filtered = filtered.filter(c => c.type === this.stds.l);
+                if(search) filtered = filtered.filter(c => c.containerNumber.includes(search));
+
+                const empties = filtered.filter(c => c.status === 'Empty');
+                const allotted = filtered.filter(c => c.status === 'Allotted').sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+                document.getElementById('kpi-20').innerText = list.filter(c => c.status === 'Empty' && c.type === this.stds.s).length;
+                document.getElementById('kpi-40').innerText = list.filter(c => c.status === 'Empty' && c.type === this.stds.l).length;
+
+                ui.renderEmpty(empties.slice((this.currentPage-1)*this.pageSize, this.currentPage*this.pageSize));
+                ui.renderAllotted(allotted);
+                ui.renderPagination(Math.ceil(empties.length / this.pageSize), this.currentPage);
+                lucide.createIcons();
+            },
+
+            goToPage(p) { this.currentPage = p; this.refreshUI(); },
+
+            handleAddContainers() {
+                const raw = document.getElementById('bulk-input').value.trim();
+                if (!raw) return;
+                raw.split('\n').forEach(line => {
+                    const [num, type] = line.trim().toUpperCase().split(/\s+/);
+                    if (/^[A-Z]{4}\d{7}$/.test(num) && (type === this.stds.s || type === this.stds.l)) {
+                        if (!DB.data[this.activeLine].some(c => c.containerNumber === num)) {
+                            DB.data[this.activeLine].push({ containerNumber: num, type: type, status: 'Empty', updatedAt: new Date().toISOString() });
+                        }
+                    }
+                });
+                DB.save();
+                this.refreshUI(true);
+                ui.toggleModal('add-modal', false);
+                document.getElementById('bulk-input').value = '';
+            },
+
+            openAllotModal(num) {
+                const c = DB.data[this.activeLine].find(x => x.containerNumber === num);
+                document.getElementById('allot-id').value = num;
+                document.getElementById('allot-title').innerText = num;
+                document.getElementById('type-badge').innerText = c.type;
+                document.getElementById('type-badge').className = `tag-small ${c.type.includes('40') ? 'text-white' : 'text-dim'}`;
+                document.getElementById('party-name').value = c.party || '';
+                document.getElementById('booking-num').value = c.booking || '';
+                document.getElementById('vessel-name').value = c.vessel || '';
+                document.getElementById('allot-date').value = c.allotDate || '';
+                document.getElementById('pickup-date').value = c.pickupDate || '';
+                const unbtn = document.getElementById('unallot-btn-container');
+                unbtn.innerHTML = c.status === 'Allotted' ? `<button onclick="app.unallot('${num}')" class="text-red-500 text-[10px] font-black border border-red-500/30 px-4 py-2 rounded uppercase">Delete Allotment</button>` : '';
+                ui.toggleModal('allot-modal', true);
+            },
+
+            saveAllotment() {
+                const num = document.getElementById('allot-id').value;
+                const idx = DB.data[this.activeLine].findIndex(x => x.containerNumber === num);
+                DB.data[this.activeLine][idx] = {
+                    ...DB.data[this.activeLine][idx],
+                    status: 'Allotted',
+                    party: document.getElementById('party-name').value,
+                    booking: document.getElementById('booking-num').value,
+                    vessel: document.getElementById('vessel-name').value,
+                    allotDate: document.getElementById('allot-date').value,
+                    pickupDate: document.getElementById('pickup-date').value,
+                    updatedAt: new Date().toISOString()
+                };
+                DB.save();
+                this.refreshUI();
+                ui.toggleModal('allot-modal', false);
+            },
+
+            unallot(num) {
+                if(!confirm("Reset unit status?")) return;
+                const idx = DB.data[this.activeLine].findIndex(x => x.containerNumber === num);
+                DB.data[this.activeLine][idx].status = 'Empty';
+                ['party','booking','vessel','allotDate','pickupDate'].forEach(k => delete DB.data[this.activeLine][idx][k]);
+                DB.save();
+                this.refreshUI();
+                ui.toggleModal('allot-modal', false);
+            }
+        };
+
+        const ui = {
+            toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); },
+            renderEmpty(data) {
+                const body = document.getElementById('empty-table-body');
+                body.innerHTML = data.length ? data.map(c => `
+                    <tr class="table-row">
+                        <td class="p-5 mono font-bold text-white tracking-[0.1em]">${c.containerNumber}</td>
+                        <td class="p-5"><span class="tag-small ${c.type.includes('40') ? 'text-white' : 'text-dim'}">${c.type}</span></td>
+                        <td class="p-5 text-right"><button onclick="app.openAllotModal('${c.containerNumber}')" class="text-[10px] font-black hover:text-white uppercase tracking-widest border-b border-transparent hover:border-white transition-all">Allot</button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="3" class="p-12 text-center text-dim text-[10px] uppercase tracking-widest">No available units found</td></tr>';
+            },
+            renderAllotted(data) {
+                const body = document.getElementById('allotted-table-body');
+                body.innerHTML = data.length ? data.map(c => `
+                    <tr class="table-row">
+                        <td class="p-5 mono font-bold text-white">${c.containerNumber}</td>
+                        <td class="p-5"><span class="tag-small ${c.type.includes('40') ? 'text-white' : 'text-dim'}">${c.type}</span></td>
+                        <td class="p-5 font-bold text-slate-400 uppercase">${c.party || '-'}</td>
+                        <td class="p-5 text-dim mono">${c.booking || '-'}</td>
+                        <td class="p-5 text-dim uppercase">${c.vessel || '-'}</td>
+                        <td class="p-5 text-dim">${c.allotDate || '-'}</td>
+                        <td class="p-5 font-bold text-white underline decoration-white/10">${c.pickupDate || '-'}</td>
+                        <td class="p-5 text-right"><button onclick="app.openAllotModal('${c.containerNumber}')" class="text-dim hover:text-white"><i data-lucide="external-link" class="w-4 h-4"></i></button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="8" class="p-12 text-center text-dim text-[10px] uppercase tracking-widest">No active allotment records</td></tr>';
+            },
+            renderPagination(total, current) {
+                const container = document.getElementById('pagination-controls');
+                if(total <= 1) { container.innerHTML = ''; return; }
+                let html = `<button onclick="app.goToPage(${current-1})" ${current === 1 ? 'disabled' : ''} class="page-btn rounded-l-lg">PREV</button>`;
+                for(let i=1; i<=total; i++) {
+                    if(i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+                        html += `<button onclick="app.goToPage(${i})" class="page-btn ${i === current ? 'active' : ''}">${i}</button>`;
+                    }
+                }
+                html += `<button onclick="app.goToPage(${current+1})" ${current === total ? 'disabled' : ''} class="page-btn rounded-r-lg">NEXT</button>`;
+                container.innerHTML = html;
+            }
+        };
+
+        DB.init();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
